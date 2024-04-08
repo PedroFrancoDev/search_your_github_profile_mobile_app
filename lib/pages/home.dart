@@ -1,7 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:search_your_profile/bloc/bloc.dart';
+import 'package:search_your_profile/model/user_profile_model.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  final TextEditingController _loginUserNameController = TextEditingController();
+  late Stream<UserProfileModel> userProfiledata;
+  final bloc = UserProfileDataBloc();
+
+  @override
+  void initState() {
+    UserProfileDataBloc();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +58,11 @@ class Home extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildTextInputContainer(),
+                  _buildSearchArea(),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  _buildUserProfileData(),
                 ],
               ),
             ),
@@ -50,38 +72,56 @@ class Home extends StatelessWidget {
     );
   }
 
-  Widget _buildTextInputContainer() {
+  Widget _buildUserProfileData() {
+    return StreamBuilder<UserProfileModel>(
+      stream: bloc.userProfileData,
+      builder: (context, snap) {
+        if (snap.hasData) {
+          return Image.network(snap.data!.htmlUrl.toString());
+        } else if (snap.hasError) {
+          return Text("sdf");
+        }
+
+        return CircularProgressIndicator(
+          color: Colors.blue[400],
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchArea() {
     return Row(
       children: [
         Expanded(
           child: TextFormField(
+            controller: _loginUserNameController,
             keyboardType: TextInputType.text,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 17,
             ),
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
                 vertical: 15,
                 horizontal: 10,
               ),
-              // helperText: "Preencha o campo",
+              //   helperText: "Preencha o campo",
               hintText: "Ex.: PedroFrancoDev",
-              labelText: "GitHub user name",
-              labelStyle: TextStyle(
+              labelText: "GitHub login name",
+              labelStyle: const TextStyle(
                 color: Colors.white,
                 fontSize: 17,
               ),
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 color: Color.fromARGB(255, 183, 183, 183),
                 fontSize: 17,
               ),
-              counterStyle: TextStyle(color: Colors.red),
-              helperStyle: TextStyle(
+              counterStyle: const TextStyle(color: Colors.red),
+              helperStyle: const TextStyle(
                 color: Color.fromARGB(255, 255, 79, 66),
                 fontSize: 17,
               ),
-              border: OutlineInputBorder(
+              border: const OutlineInputBorder(
                 borderSide: BorderSide(style: BorderStyle.none),
                 borderRadius: BorderRadius.all(
                   Radius.circular(
@@ -103,7 +143,13 @@ class Home extends StatelessWidget {
             color: Colors.white,
           ),
           child: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              final loginUserName = _loginUserNameController.text.toString();
+              bloc.fetchUserProfileData(loginName: loginUserName);
+              userProfiledata = bloc.userProfileData;
+
+              _loginUserNameController.clear();
+            },
             icon: const Icon(
               Icons.search,
               size: 30,
