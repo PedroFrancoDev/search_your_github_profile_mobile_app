@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:search_your_profile/bloc/bloc.dart';
 import 'package:search_your_profile/model/user_profile_model.dart';
 
@@ -11,13 +10,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final TextEditingController _loginUserNameController = TextEditingController();
+  final TextEditingController _loginUserNameController =
+      TextEditingController();
   late Stream<UserProfileModel> userProfiledata;
   final bloc = UserProfileDataBloc();
 
   @override
   void initState() {
-    UserProfileDataBloc();
     super.initState();
   }
 
@@ -26,7 +25,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 29, 29, 29),
+        backgroundColor: const Color(0XFF000408),
         toolbarHeight: 60,
         title: const Text(
           "Search your GitHub profile",
@@ -48,7 +47,7 @@ class _HomeState extends State<Home> {
           Container(
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
-            color: const Color.fromARGB(197, 0, 0, 0),
+            color: Color.fromARGB(217, 12, 17, 23),
             child: Padding(
               padding: const EdgeInsets.only(
                 left: 16,
@@ -77,13 +76,16 @@ class _HomeState extends State<Home> {
       stream: bloc.userProfileData,
       builder: (context, snap) {
         if (snap.hasData) {
-          return Image.network(snap.data!.htmlUrl.toString());
+          return Image.network(
+            snap.data!.htmlUrl!,
+          );
         } else if (snap.hasError) {
           return Text("sdf");
         }
 
-        return CircularProgressIndicator(
+        return LinearProgressIndicator(
           color: Colors.blue[400],
+          minHeight: 4,
         );
       },
     );

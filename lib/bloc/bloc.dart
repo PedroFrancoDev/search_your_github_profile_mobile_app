@@ -13,8 +13,4 @@ class UserProfileDataBloc {
 
     _userProfileDataFetch.sink.add(data);
   }
-
-  dispose() {
-    _userProfileDataFetch.close();
-  }
 }
