@@ -10,10 +10,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final TextEditingController _loginUserNameController =
-      TextEditingController();
+  final TextEditingController _loginUserNameController = TextEditingController();
   late Stream<UserProfileModel> userProfiledata;
   final bloc = UserProfileDataBloc();
+  bool? isLoaging;
 
   @override
   void initState() {
@@ -49,22 +49,23 @@ class _HomeState extends State<Home> {
             width: MediaQuery.of(context).size.width,
             color: Color.fromARGB(217, 12, 17, 23),
             child: Padding(
-              padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 30,
-                bottom: 16,
-              ),
-              child: Column(
-                children: [
-                  _buildSearchArea(),
-                  const SizedBox(
-                    height: 20,
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 30,
+                  bottom: 16,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildSearchArea(),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      _buildUserProfileData(),
+                    ],
                   ),
-                  _buildUserProfileData(),
-                ],
-              ),
-            ),
+                )),
           ),
         ],
       ),
@@ -76,17 +77,82 @@ class _HomeState extends State<Home> {
       stream: bloc.userProfileData,
       builder: (context, snap) {
         if (snap.hasData) {
-          return Image.network(
-            snap.data!.htmlUrl!,
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  snap.data!.avatarUrl!,
+                  fit: BoxFit.scaleDown,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  snap.data!.name!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  snap.data!.login!,
+                  style: const TextStyle(
+                    color: Color.fromARGB(255, 138, 138, 138),
+                    fontSize: 14,
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  snap.data!.bio!,
+                  style: const TextStyle(
+                    color: Color.fromARGB(255, 255, 255, 255),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  children: [
+                    const Text(
+                      "Repositórios publico: ",
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255),
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      snap.data!.publicRepos!.toString(),
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 53, 162, 46),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
           );
         } else if (snap.hasError) {
-          return Text("sdf");
+          return Text("tt");
+        }
+        if (isLoaging != null) {
+          if (isLoaging! == true) {
+            return CircularProgressIndicator(
+              color: Colors.blue[400],
+              strokeWidth: 4,
+            );
+          }
         }
 
-        return LinearProgressIndicator(
-          color: Colors.blue[400],
-          minHeight: 4,
-        );
+        return Container();
       },
     );
   }
@@ -102,7 +168,7 @@ class _HomeState extends State<Home> {
               color: Colors.white,
               fontSize: 17,
             ),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               contentPadding: const EdgeInsets.symmetric(
                 vertical: 15,
                 horizontal: 10,
@@ -145,13 +211,7 @@ class _HomeState extends State<Home> {
             color: Colors.white,
           ),
           child: IconButton(
-            onPressed: () {
-              final loginUserName = _loginUserNameController.text.toString();
-              bloc.fetchUserProfileData(loginName: loginUserName);
-              userProfiledata = bloc.userProfileData;
-
-              _loginUserNameController.clear();
-            },
+            onPressed: () => getUserProfileData(),
             icon: const Icon(
               Icons.search,
               size: 30,
@@ -161,6 +221,28 @@ class _HomeState extends State<Home> {
           ),
         ),
       ],
+    );
+  }
+
+  getUserProfileData() {
+    setState(() {
+      isLoaging = true;
+    });
+    Future.delayed(
+      const Duration(seconds: 2),
+      () {
+        try {
+          final loginUserName = _loginUserNameController.text.toString();
+          bloc.fetchUserProfileData(loginName: loginUserName);
+          userProfiledata = bloc.userProfileData;
+
+          _loginUserNameController.clear();
+        } finally {
+          setState(() {
+            isLoaging = false;
+          });
+        }
+      },
     );
   }
 }
