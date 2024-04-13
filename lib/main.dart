@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:search_your_profile/pages/home.dart';
+import 'package:search_your_profile/pages/splash_scream.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Home(),
+      home: SplashScream(),
     );
   }
 }

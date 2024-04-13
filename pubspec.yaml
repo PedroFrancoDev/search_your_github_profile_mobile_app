@@ -39,6 +39,8 @@ dependencies:
   bloc: ^8.1.4
   flutter_bloc: ^8.1.5
   rxdart: ^0.27.7
+  iconsax: ^0.0.8
+  url_launcher: ^6.0.9
 
 dev_dependencies:
   flutter_test:

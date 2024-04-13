@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:search_your_profile/bloc/bloc.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:search_your_profile/model/user_profile_model.dart';
+import 'package:search_your_profile/services/repository.dart';
+import 'package:url_launcher/link.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -11,13 +13,15 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final TextEditingController _loginUserNameController = TextEditingController();
-  late Stream<UserProfileModel> userProfiledata;
-  final bloc = UserProfileDataBloc();
   bool? isLoaging;
+  late Future<UserProfileModel> userProfileData;
 
   @override
   void initState() {
     super.initState();
+    final repo = Repository();
+
+    userProfileData = repo.fetchUserProfileData(loginName: "PedroFrancodev");
   }
 
   @override
@@ -47,7 +51,7 @@ class _HomeState extends State<Home> {
           Container(
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
-            color: Color.fromARGB(217, 12, 17, 23),
+            color: const Color.fromARGB(217, 12, 17, 23),
             child: Padding(
                 padding: const EdgeInsets.only(
                   left: 16,
@@ -73,15 +77,13 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildUserProfileData() {
-    return StreamBuilder<UserProfileModel>(
-      stream: bloc.userProfileData,
+    return FutureBuilder(
+      future: userProfileData,
       builder: (context, snap) {
-        if (snap.hasData) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
+        var state = snap.connectionState;
+        if (state == ConnectionState.done) {
+          if (snap.hasData) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Image.network(
@@ -99,14 +101,43 @@ class _HomeState extends State<Home> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Text(
-                  snap.data!.login!,
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 138, 138, 138),
-                    fontSize: 14,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      snap.data!.login!,
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 138, 138, 138),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    const Text(
+                      "|",
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 138, 138, 138),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    const Icon(
+                      Iconsax.location,
+                      color: Color.fromARGB(255, 138, 138, 138),
+                      size: 19,
+                    ),
+                    Text(
+                      " ${snap.data!.location!}",
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 138, 138, 138),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 Text(
@@ -121,8 +152,13 @@ class _HomeState extends State<Home> {
                 ),
                 Row(
                   children: [
+                    const Icon(
+                      Iconsax.book,
+                      color: Colors.white,
+                      size: 19,
+                    ),
                     const Text(
-                      "Repositórios publico: ",
+                      " Repositórios público: ",
                       style: TextStyle(
                         color: Color.fromARGB(255, 255, 255, 255),
                         fontSize: 13,
@@ -136,22 +172,72 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                   ],
-                )
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  children: [
+                    const Icon(
+                      Iconsax.people5,
+                      color: Colors.white,
+                      size: 19,
+                    ),
+                    Text(
+                      " ${snap.data!.followers} Seguidores | Seguindo ${snap.data!.following}",
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Icon(
+                      Iconsax.link,
+                      color: Colors.white,
+                      size: 19,
+                    ),
+                    Link(
+                      uri: Uri.parse("https://pub.dev"),
+                      target: LinkTarget.blank,
+                      builder: (BuildContext ctx, FollowLink? openLink) {
+                        return TextButton.icon(
+                          onPressed: openLink,
+                          label: const Text('Visite o perfil do meu GitHub'),
+                          icon: const Icon(
+                            Iconsax.link,
+                            color: Colors.white,
+                            size: 19,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ],
-            ),
-          );
-        } else if (snap.hasError) {
-          return Text("tt");
-        }
-        if (isLoaging != null) {
-          if (isLoaging! == true) {
-            return CircularProgressIndicator(
-              color: Colors.blue[400],
-              strokeWidth: 4,
             );
+          } else {
+            const Text("Sem perfil");
           }
         }
 
+        if (snap.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(
+            color: Colors.blue[400],
+            strokeWidth: 4,
+          );
+        }
+        if (snap.hasError) {
+          return const Text(
+            "Erro na requisição",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+            ),
+          );
+        }
         return Container();
       },
     );
@@ -169,27 +255,27 @@ class _HomeState extends State<Home> {
               fontSize: 17,
             ),
             decoration: const InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
+              contentPadding: EdgeInsets.symmetric(
                 vertical: 15,
                 horizontal: 10,
               ),
               //   helperText: "Preencha o campo",
               hintText: "Ex.: PedroFrancoDev",
               labelText: "GitHub login name",
-              labelStyle: const TextStyle(
+              labelStyle: TextStyle(
                 color: Colors.white,
                 fontSize: 17,
               ),
-              hintStyle: const TextStyle(
+              hintStyle: TextStyle(
                 color: Color.fromARGB(255, 183, 183, 183),
                 fontSize: 17,
               ),
-              counterStyle: const TextStyle(color: Colors.red),
-              helperStyle: const TextStyle(
+              counterStyle: TextStyle(color: Colors.red),
+              helperStyle: TextStyle(
                 color: Color.fromARGB(255, 255, 79, 66),
                 fontSize: 17,
               ),
-              border: const OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(style: BorderStyle.none),
                 borderRadius: BorderRadius.all(
                   Radius.circular(
@@ -225,23 +311,13 @@ class _HomeState extends State<Home> {
   }
 
   getUserProfileData() {
-    setState(() {
-      isLoaging = true;
-    });
-    Future.delayed(
-      const Duration(seconds: 2),
+    setState(
       () {
-        try {
-          final loginUserName = _loginUserNameController.text.toString();
-          bloc.fetchUserProfileData(loginName: loginUserName);
-          userProfiledata = bloc.userProfileData;
+        final loginName = _loginUserNameController.text.toString();
+        final Repository repository = Repository();
+        userProfileData = repository.fetchUserProfileData(loginName: loginName);
 
-          _loginUserNameController.clear();
-        } finally {
-          setState(() {
-            isLoaging = false;
-          });
-        }
+        _loginUserNameController.clear();
       },
     );
   }
