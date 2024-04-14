@@ -13,15 +13,13 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final TextEditingController _loginUserNameController = TextEditingController();
-  bool? isLoaging;
-  late Future<UserProfileModel> userProfileData;
+  bool textFieldError = false;
+  Future<UserProfileModel> userProfileData = Repository().fetchUserProfileData(loginName: "");
+  final Repository repository = Repository();
 
   @override
   void initState() {
     super.initState();
-    final repo = Repository();
-
-    userProfileData = repo.fetchUserProfileData(loginName: "PedroFrancodev");
   }
 
   @override
@@ -37,6 +35,22 @@ class _HomeState extends State<Home> {
             color: Colors.white,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: () {
+                repository.fetchUserProfileData(loginName: "pedrofrancodev");
+                print("dddf");
+              },
+              icon: const Icon(
+                Iconsax.refresh,
+                color: Colors.white,
+                size: 19,
+              ),
+            ),
+          )
+        ],
       ),
       body: Stack(
         children: [
@@ -81,6 +95,7 @@ class _HomeState extends State<Home> {
       future: userProfileData,
       builder: (context, snap) {
         var state = snap.connectionState;
+
         if (state == ConnectionState.done) {
           if (snap.hasData) {
             return Column(
@@ -165,7 +180,7 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                     Text(
-                      snap.data!.publicRepos!.toString(),
+                      snap.data!.publicRepos!.toString() ?? "0",
                       style: const TextStyle(
                         color: Color.fromARGB(255, 53, 162, 46),
                         fontSize: 13,
@@ -184,7 +199,7 @@ class _HomeState extends State<Home> {
                       size: 19,
                     ),
                     Text(
-                      " ${snap.data!.followers} Seguidores | Seguindo ${snap.data!.following}",
+                      " ${snap.data!.followers ?? "0"} Seguidores | Seguindo ${snap.data!.following ?? "0"}",
                       style: const TextStyle(
                         color: Color.fromARGB(255, 255, 255, 255),
                         fontSize: 13,
@@ -218,33 +233,42 @@ class _HomeState extends State<Home> {
                 ),
               ],
             );
-          } else {
-            const Text("Sem perfil");
+          }
+          if (snap.data == null) {
+            return const Text(
+              "Sem dados",
+              style: TextStyle(
+                color: Color.fromARGB(255, 255, 255, 255),
+                fontSize: 13,
+              ),
+            );
           }
         }
-
-        if (snap.connectionState == ConnectionState.waiting) {
+        if (state == ConnectionState.waiting) {
           return CircularProgressIndicator(
             color: Colors.blue[400],
             strokeWidth: 4,
           );
         }
+
         if (snap.hasError) {
-          return const Text(
-            "Erro na requisição",
-            style: TextStyle(
+          return Text(
+            snap.error.toString(),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 17,
             ),
           );
         }
-        return Container();
+
+        return const Text("data");
       },
     );
   }
 
   Widget _buildSearchArea() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: TextFormField(
@@ -254,28 +278,28 @@ class _HomeState extends State<Home> {
               color: Colors.white,
               fontSize: 17,
             ),
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
                 vertical: 15,
                 horizontal: 10,
               ),
-              //   helperText: "Preencha o campo",
+              helperText: textFieldError ? "Preencha o campo" : "",
               hintText: "Ex.: PedroFrancoDev",
               labelText: "GitHub login name",
-              labelStyle: TextStyle(
+              labelStyle: const TextStyle(
                 color: Colors.white,
                 fontSize: 17,
               ),
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 color: Color.fromARGB(255, 183, 183, 183),
                 fontSize: 17,
               ),
-              counterStyle: TextStyle(color: Colors.red),
-              helperStyle: TextStyle(
+              counterStyle: const TextStyle(color: Colors.red),
+              helperStyle: const TextStyle(
                 color: Color.fromARGB(255, 255, 79, 66),
                 fontSize: 17,
               ),
-              border: OutlineInputBorder(
+              border: const OutlineInputBorder(
                 borderSide: BorderSide(style: BorderStyle.none),
                 borderRadius: BorderRadius.all(
                   Radius.circular(
@@ -311,14 +335,21 @@ class _HomeState extends State<Home> {
   }
 
   getUserProfileData() {
-    setState(
-      () {
-        final loginName = _loginUserNameController.text.toString();
-        final Repository repository = Repository();
-        userProfileData = repository.fetchUserProfileData(loginName: loginName);
+    if (_loginUserNameController.text.isEmpty) {
+      setState(() {
+        textFieldError = true;
+      });
+    } else {
+      setState(
+        () {
+          textFieldError = false;
+          final loginName = _loginUserNameController.text.toString();
 
-        _loginUserNameController.clear();
-      },
-    );
+          userProfileData = repository.fetchUserProfileData(loginName: loginName);
+
+          _loginUserNameController.clear();
+        },
+      );
+    }
   }
 }
