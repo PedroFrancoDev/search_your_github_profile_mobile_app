@@ -12,9 +12,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final TextEditingController _loginUserNameController = TextEditingController();
+  final TextEditingController _loginUserNameController =
+      TextEditingController();
   bool textFieldError = false;
-  Future<UserProfileModel> userProfileData = Repository().fetchUserProfileData(loginName: "");
+  Future<UserProfileModel> userProfileData =
+      Repository().fetchUserProfileData(loginName: "");
   final Repository repository = Repository();
 
   @override
@@ -40,8 +42,7 @@ class _HomeState extends State<Home> {
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               onPressed: () {
-                repository.fetchUserProfileData(loginName: "pedrofrancodev");
-                print("dddf");
+                _loginUserNameController.clear();
               },
               icon: const Icon(
                 Iconsax.refresh,
@@ -67,23 +68,24 @@ class _HomeState extends State<Home> {
             width: MediaQuery.of(context).size.width,
             color: const Color.fromARGB(217, 12, 17, 23),
             child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 30,
-                  bottom: 16,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildSearchArea(),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      _buildUserProfileData(),
-                    ],
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 30,
+                bottom: 16,
+              ),
+              child: Column(
+                children: [
+                  _buildSearchArea(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: _buildUserProfileData(),
+                    ),
                   ),
-                )),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -101,9 +103,15 @@ class _HomeState extends State<Home> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network(
-                  snap.data!.avatarUrl!,
-                  fit: BoxFit.scaleDown,
+                Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Image.network(
+                    snap.data!.avatarUrl!,
+                    fit: BoxFit.scaleDown,
+                  ),
                 ),
                 const SizedBox(
                   height: 10,
@@ -112,7 +120,7 @@ class _HomeState extends State<Home> {
                   snap.data!.name!,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 17,
+                    fontSize: 18,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -159,7 +167,7 @@ class _HomeState extends State<Home> {
                   snap.data!.bio!,
                   style: const TextStyle(
                     color: Color.fromARGB(255, 255, 255, 255),
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(
@@ -215,17 +223,18 @@ class _HomeState extends State<Home> {
                       size: 19,
                     ),
                     Link(
-                      uri: Uri.parse("https://pub.dev"),
+                      uri: Uri.parse(snap.data!.htmlUrl!),
                       target: LinkTarget.blank,
                       builder: (BuildContext ctx, FollowLink? openLink) {
                         return TextButton.icon(
                           onPressed: openLink,
-                          label: const Text('Visite o perfil do meu GitHub'),
-                          icon: const Icon(
-                            Iconsax.link,
-                            color: Colors.white,
-                            size: 19,
+                          label: const Text(
+                            'Visite o perfil do meu GitHub',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 48, 156, 243),
+                            ),
                           ),
+                          icon: Text(""),
                         );
                       },
                     ),
@@ -261,7 +270,7 @@ class _HomeState extends State<Home> {
           );
         }
 
-        return const Text("data");
+        return const Text("");
       },
     );
   }
@@ -345,7 +354,8 @@ class _HomeState extends State<Home> {
           textFieldError = false;
           final loginName = _loginUserNameController.text.toString();
 
-          userProfileData = repository.fetchUserProfileData(loginName: loginName);
+          userProfileData =
+              repository.fetchUserProfileData(loginName: loginName);
 
           _loginUserNameController.clear();
         },
